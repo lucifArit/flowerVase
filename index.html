@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinite Rose Bouquet Experience</title>
+    <style>
+        /* Shared Styles */
+        * { margin: 0; padding: 0; box-sizing: border-box;font-family: 'cursive'; }
+
+        body, html {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #000; 
+            font-family: Arial, sans-serif;
+        }
+
+        /* --- BACKGROUND: INFINITE PETALS --- */
+        #bg-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+        canvas#mask { display: none; }
+
+        /* --- FOREGROUND: YOUR VASE UI --- */
+        #ui-wrapper {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none; 
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 65%;
+            max-width: 800px;
+            pointer-events: auto;
+        }
+
+        .control-panel {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 4px 30px rgba(255, 255, 255, 0.5);
+            max-width: 600px;
+            width: 90%;
+            pointer-events: auto;
+        }
+
+        .panel-title { text-align: center; margin-bottom: 15px; font-size: 16px; font-weight: 500; color: #666; }
+        .button-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .rose-btn { border: none; border-radius: 6px; padding: 12px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+        .rose-btn:hover { transform: scale(1.05); }
+        .controls-section { background: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 15px; }
+        .control-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; color: #d1cdcd; }
+        .control-label { background: #150101; padding: 8px 16px; border-radius: 6px; font-weight: 500; }
+        .control-value { background: rgb(0, 0, 0); padding: 8px 16px; border-radius: 6px; border: 1px solid #ddd; min-width: 40px; text-align: center; }
+        .slider-row { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
+        .slider-label { font-size: 13px; color: #d8d3d3; min-width: 130px; }
+        .slider { flex: 1; accent-color: #9c27b0; }
+        .clear-btn { background: #070707; color: #b4b1b1; border: none; border-radius: 6px; padding: 10px 20px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; }
+        .clear-btn:hover { background: #d0d0d0; }
+
+        /* ========= SIZE REDUCTION ONLY ========= */
+
+/* Tablets & small laptops */
+@media (max-width: 1024px) {
+    #canvas-container {
+        height: 55%;
+        max-width: 700px;
+    }
+
+    .control-panel {
+        padding: 16px;
+    }
+
+    .rose-btn {
+        padding: 10px;
+        font-size: 13px;
+    }
+
+    .panel-title {
+        font-size: 14px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    #canvas-container {
+        height: 45%;
+        max-width: 90%;
+    }
+
+    .control-panel {
+        padding: 14px;
+        margin-top: 12px;
+    }
+
+    .rose-btn {
+        padding: 9px;
+        font-size: 12px;
+    }
+
+    .panel-title {
+        font-size: 13px;
+        line-height: 1.4;
+    }
+
+    .control-label,
+    .control-value {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .slider-label {
+        font-size: 12px;
+    }
+
+    .clear-btn {
+        padding: 8px 16px;
+        font-size: 12px;
+    }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+    #canvas-container {
+        height: 40%;
+    }
+
+    .rose-btn {
+        padding: 8px;
+        font-size: 11px;
+    }
+
+    .panel-title {
+        font-size: 12px;
+    }
+}
+    </style>
+</head>
+<body>
+
+    <div id="bg-container">
+        <canvas id="mask"></canvas>
+        <canvas id="scene"></canvas>
+    </div>
+
+    <div id="ui-wrapper">
+        <div id="canvas-container"></div>
+        
+        <div class="control-panel">
+            <div class="panel-title" style="color: white;">"I chose the background, but you became the highlight.
+Choose the emotions your heart leans toward—just as mine leans toward you. and send me the screenshot!"</div>
+            <div class="button-grid">
+                <button class="rose-btn" style="background: #ef5350; color: rgb(0, 0, 0);" onclick="addRose('#ff0000')">love</button>
+                <button class="rose-btn" style="background: #f8bbd0; color: #000000;" onclick="addRose('#ffc0cb')">sweetness</button>
+                <button class="rose-btn" style="background: #fff176; color: #000000;" onclick="addRose('#ffeb3b')">warmth</button>
+                <button class="rose-btn" style="background: #f5f5f5; color: #000000; border: 1px solid #ddd;" onclick="addRose('#ffffff')">Purity</button>
+                <button class="rose-btn" style="background: #ff6b6b; color: rgb(0, 0, 0);" onclick="addRose('#ff6b6b')">fascination</button>
+                <button class="rose-btn" style="background: #a060ce; color: rgb(0, 0, 0);" onclick="addRose('#9c27b0')">admiration</button>
+                <button class="rose-btn" style="background: #f0f0f0; color: #000000; border: 1px solid #ddd;" onclick="addRose('#e8e8e8')">Enduring</button>
+                <button class="rose-btn" style="background: #424242; color: white;" onclick="addRose('#2c2c2c')">dark fantasy</button>
+                <button class="rose-btn" style="background: #ff9800; color: white;" onclick="addRose('#ff9800')">Attraction</button>
+            </div>
+
+            <div class="controls-section">
+                <div class="control-row">
+                    <span class="control-label">Button</span>
+                    <span>Rotate 3D View:</span>
+                    <span class="control-value" id="rotation-display">-180</span>
+                </div>
+                <div class="slider-row">
+                    <span class="slider-label">snider/l bouquet:</span>
+                    <input type="range" class="slider" min="-180" max="180" value="-180" id="rotation-slider">
+                </div>
+                <button class="clear-btn" onclick="clearBouquet()">Clear vase</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        /* ---------- FALLING PETALS (INFINITE) ---------- */
+        const maskCanvas = document.getElementById("mask");
+        const sceneCanvas = document.getElementById("scene");
+        const ctx = sceneCanvas.getContext("2d");
+        let W = window.innerWidth, H = window.innerHeight;
+        maskCanvas.width = sceneCanvas.width = W;
+        maskCanvas.height = sceneCanvas.height = H;
+
+        let petals = [];
+
+        function createPetal(isInitial = false) {
+            return {
+                x: Math.random() * W,
+                y: isInitial ? Math.random() * H : -20 - (Math.random() * 100),
+                r: 5 + Math.random() * 5,
+                rot: Math.random() * Math.PI,
+                speed: 3 + Math.random() * 3,
+                rotSpeed: 0.05 + Math.random() * 0.1,
+                swing: 2 + Math.random() * 4
+            };
+        }
+
+        function drawPetal(p) {
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot);
+            ctx.fillStyle = "rgba(230, 57, 111, 0.9)";
+            ctx.beginPath();
+            ctx.ellipse(0, 0, p.r * 0.7, p.r, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function renderPetals() {
+            ctx.clearRect(0, 0, W, H);
+            for (let i = petals.length - 1; i >= 0; i--) {
+                let p = petals[i];
+                p.y += p.speed;
+                p.x += Math.sin(p.y * 0.02) * p.swing;
+                p.rot += p.rotSpeed;
+                if (p.y > H + 20) {
+                    Object.assign(p, createPetal());
+                    continue;
+                }
+                drawPetal(p);
+            }
+            requestAnimationFrame(renderPetals);
+        }
+
+        for(let i = 0; i < 150; i++) petals.push(createPetal(true));
+        renderPetals();
+
+        /* ---------- VASE & ROSE (EXACT ORIGINAL LOGIC) ---------- */
+        let scene, camera, renderer, roseObjects = [], vase, roses = [];
+
+        function createRoseTexture(color) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256; canvas.height = 256;
+            const ctxR = canvas.getContext('2d');
+            const centerX = 128, centerY = 128;
+            
+            const hexToRgb = (hex) => {
+                const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : {r: 255, g: 0, b: 0};
+            };
+            
+            const rgb = hexToRgb(color);
+            const baseColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+            const darkColor = `rgb(${rgb.r * 0.6}, ${rgb.g * 0.6}, ${rgb.b * 0.6})`;
+            const lightColor = `rgb(${Math.min(255, rgb.r * 1.2)}, ${Math.min(255, rgb.g * 1.2)}, ${Math.min(255, rgb.b * 1.2)})`;
+            
+            for (let i = 0; i < 10; i++) {
+                const angle = (i / 10) * Math.PI * 2;
+                const x = centerX + Math.cos(angle) * 70, y = centerY + Math.sin(angle) * 70;
+                const g = ctxR.createRadialGradient(x, y, 5, x, y, 35);
+                g.addColorStop(0, lightColor); g.addColorStop(0.7, baseColor); g.addColorStop(1, darkColor);
+                ctxR.fillStyle = g; ctxR.beginPath(); ctxR.ellipse(x, y, 35, 30, angle, 0, Math.PI * 2); ctxR.fill();
+            }
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2 + Math.PI / 8;
+                const x = centerX + Math.cos(angle) * 45, y = centerY + Math.sin(angle) * 45;
+                const g = ctxR.createRadialGradient(x, y, 5, x, y, 28);
+                g.addColorStop(0, lightColor); g.addColorStop(0.6, baseColor); g.addColorStop(1, darkColor);
+                ctxR.fillStyle = g; ctxR.beginPath(); ctxR.ellipse(x, y, 28, 25, angle, 0, Math.PI * 2); ctxR.fill();
+            }
+            for (let i = 0; i < 5; i++) {
+                const angle = (i / 5) * Math.PI * 2;
+                const x = centerX + Math.cos(angle) * 22, y = centerY + Math.sin(angle) * 22;
+                const g = ctxR.createRadialGradient(x, y, 3, x, y, 20);
+                g.addColorStop(0, lightColor); g.addColorStop(0.5, baseColor); g.addColorStop(1, darkColor);
+                ctxR.fillStyle = g; ctxR.beginPath(); ctxR.ellipse(x, y, 20, 18, angle, 0, Math.PI * 2); ctxR.fill();
+            }
+            const centerG = ctxR.createRadialGradient(centerX, centerY, 0, centerX, centerY, 15);
+            centerG.addColorStop(0, lightColor); centerG.addColorStop(0.7, baseColor); centerG.addColorStop(1, darkColor);
+            ctxR.fillStyle = centerG; ctxR.beginPath(); ctxR.arc(centerX, centerY, 15, 0, Math.PI * 2); ctxR.fill();
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function init() {
+            const container = document.getElementById('canvas-container');
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 1, 6);
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight1.position.set(5, 5, 5);
+            scene.add(directionalLight1);
+
+            vase = createVase();
+            scene.add(vase);
+
+            document.getElementById('rotation-slider').addEventListener('input', function(e) {
+                const rotation = parseInt(e.target.value);
+                document.getElementById('rotation-display').textContent = rotation.toString();
+                scene.rotation.y = (rotation * Math.PI) / 180;
+            });
+            animate();
+        }
+
+        function createVase() {
+            const vaseGroup = new THREE.Group();
+            const points = [
+                new THREE.Vector2(0, 0), new THREE.Vector2(0.3, 0), new THREE.Vector2(0.35, 0.2),
+                new THREE.Vector2(0.38, 0.5), new THREE.Vector2(0.35, 0.8), new THREE.Vector2(0.28, 1.0),
+                new THREE.Vector2(0.25, 1.2)
+            ];
+            const vaseGeometry = new THREE.LatheGeometry(points, 32);
+            
+            // ADJUSTED MATERIAL FOR BETTER VISIBILITY
+            const vaseMaterial = new THREE.MeshPhysicalMaterial({
+                color: 0xffffff,          // Bright white ceramic
+                transparent: true, 
+                opacity: 0.95,            // Almost solid
+                transmission: 0.1,        // Less glass-like, more solid
+                roughness: 0.1, 
+                metalness: 0.1, 
+                clearcoat: 1.0
+            });
+            
+            const vaseMesh = new THREE.Mesh(vaseGeometry, vaseMaterial);
+            vaseMesh.position.y = -1.5;
+            vaseGroup.add(vaseMesh);
+            return vaseGroup;
+        }
+
+        function createStem(height, position) {
+            const stemGroup = new THREE.Group();
+            const stemGeometry = new THREE.CylinderGeometry(0.03, 0.03, height, 8);
+            const stemMaterial = new THREE.MeshPhongMaterial({ color: 0x2d5016 });
+            const stem = new THREE.Mesh(stemGeometry, stemMaterial);
+            stem.position.y = -height / 2;
+            stemGroup.add(stem);
+            const leafGeometry = new THREE.SphereGeometry(0.15, 8, 8);
+            const leafMaterial = new THREE.MeshPhongMaterial({ color: 0x3d7020 });
+            const leaf1 = new THREE.Mesh(leafGeometry, leafMaterial);
+            leaf1.scale.set(1.8, 1.0, 0.3); leaf1.position.set(0.1, -height * 0.3, 0); leaf1.rotation.z = Math.PI / 6;
+            stemGroup.add(leaf1);
+            const leaf2 = new THREE.Mesh(leafGeometry, leafMaterial);
+            leaf2.scale.set(1.8, 1.0, 0.3); leaf2.position.set(-0.1, -height * 0.5, 0); leaf2.rotation.z = -Math.PI / 6;
+            stemGroup.add(leaf2);
+            stemGroup.position.copy(position);
+            return stemGroup;
+        }
+
+        function updateRoses() {
+            roseObjects.forEach(item => { scene.remove(item.rose); scene.remove(item.stem); });
+            roseObjects = [];
+            const positions = [
+                { pos: new THREE.Vector3(-0.25, 0.5, 0.15), height: 2.0, scale: 1.0 },
+                { pos: new THREE.Vector3(-0.05, 0.8, 0), height: 2.3, scale: 1.1 },
+                { pos: new THREE.Vector3(0.25, 0.5, 0.1), height: 2.0, scale: 1.0 },
+                { pos: new THREE.Vector3(0, 0.2, 0.25), height: 1.7, scale: 0.95 },
+                { pos: new THREE.Vector3(0.2, 0.3, -0.2), height: 1.8, scale: 0.95 },
+                { pos: new THREE.Vector3(-0.2, 0.3, -0.1), height: 1.9, scale: 1.0 },
+                { pos: new THREE.Vector3(0.1, 0.6, -0.15), height: 2.1, scale: 1.05 },
+                { pos: new THREE.Vector3(-0.15, 0.1, 0.2), height: 1.6, scale: 0.9 }
+            ];
+            roses.forEach((roseColor, index) => {
+                if (index >= positions.length) return;
+                const data = positions[index];
+                const stem = createStem(data.height, data.pos);
+                scene.add(stem);
+                const rosePos = new THREE.Vector3(data.pos.x, data.pos.y + data.height /  10, data.pos.z);
+                const texture = createRoseTexture(roseColor);
+                const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true }));
+                sprite.scale.set(0.8 * data.scale, 0.8 * data.scale, 1);
+                sprite.position.copy(rosePos);
+                scene.add(sprite);
+                roseObjects.push({ rose: sprite, stem });
+            });
+        }
+
+        function addRose(color) { roses.push(color); updateRoses(); }
+        function clearBouquet() { roses = []; updateRoses(); }
+        function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); }
+
+        init();
+
+        window.addEventListener('resize', () => {
+            W = window.innerWidth; H = window.innerHeight;
+            sceneCanvas.width = W; sceneCanvas.height = H;
+            const container = document.getElementById('canvas-container');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+    </script>
+</body>
+</html>
